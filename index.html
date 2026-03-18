@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A1A">
+  <meta name="description" content="Number Smash - Flick, merge, and smash numbers! Fast math fun for kids.">
+  <meta property="og:title" content="Number Smash - Can you beat my score?">
+  <meta property="og:description" content="Flick bouncy number blobs to hit target sums! Fast, chaotic math fun.">
+  <meta property="og:type" content="website">
+  <title>Number Smash</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Loading -->
+    <div id="screen-loading" class="screen active">
+      <div class="loading-content">
+        <h1 class="logo-text">Number Smash</h1>
+        <div class="loading-bar"><div class="loading-fill"></div></div>
+        <p class="loading-tip">Smashing numbers together...</p>
+      </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="screen-menu" class="screen">
+      <div class="menu-container">
+        <h1 class="logo-text logo-animated">Number<br>Smash</h1>
+        <div class="menu-subtitle">Flick. Merge. SMASH!</div>
+        <div class="streak-badge" id="menu-streak" style="display:none">
+          <span class="streak-fire">&#x1F525;</span>
+          <span class="streak-count"></span> day streak!
+        </div>
+        <div class="menu-buttons">
+          <button class="btn btn-primary btn-large" onclick="App.navigate('worlds')">
+            <span class="btn-icon">&#x25B6;</span> Play
+          </button>
+          <button class="btn btn-secondary btn-large" onclick="App.startEndless()">
+            <span class="btn-icon">&#x267E;</span> Endless Mode
+          </button>
+          <button class="btn btn-accent btn-large" onclick="App.navigate('daily')">
+            <span class="btn-icon">&#x2B50;</span> Daily Challenge
+          </button>
+          <div class="menu-row">
+            <button class="btn btn-ghost" onclick="App.navigate('collection')">
+              <span class="btn-icon">&#x1F3A8;</span> Skins
+            </button>
+            <button class="btn btn-ghost" onclick="App.navigate('shop')">
+              <span class="btn-icon">&#x1F6D2;</span> Shop
+            </button>
+            <button class="btn btn-ghost" onclick="App.navigate('achievements')">
+              <span class="btn-icon">&#x1F3C6;</span> Badges
+            </button>
+          </div>
+        </div>
+        <div class="menu-footer">
+          <div class="stat-pill"><span class="stat-icon">&#x1F3AF;</span> Best: <span id="menu-highscore">0</span></div>
+          <div class="stat-pill"><span class="stat-icon">&#x1F4A5;</span> Max: <span id="menu-maxcombo">0</span>x</div>
+          <div class="stat-pill"><span class="stat-icon">&#x2B50;</span> <span id="menu-stars">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- World Select -->
+    <div id="screen-worlds" class="screen">
+      <div class="screen-header">
+        <button class="btn btn-back" onclick="App.navigate('menu')">&#x2190;</button>
+        <h2>Select World</h2>
+        <div class="header-stats"><span id="worlds-stars">&#x2B50; 0</span></div>
+      </div>
+      <div class="worlds-container" id="worlds-container"></div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="screen">
+      <div class="game-hud">
+        <div class="hud-left">
+          <button class="btn btn-back btn-tiny" onclick="Game.quit()">&#x2190;</button>
+          <div class="hud-score">
+            <div class="hud-score-label">SCORE</div>
+            <div class="hud-score-value" id="hud-score">0</div>
+          </div>
+        </div>
+        <div class="hud-center">
+          <div class="target-display" id="target-display">
+            <div class="target-label">MAKE</div>
+            <div class="target-number" id="target-number">10</div>
+          </div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-combo" id="hud-combo" style="display:none">
+            <span class="combo-count" id="combo-count">2</span><span class="combo-x">x</span>
+          </div>
+        </div>
+      </div>
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+      <canvas id="game-canvas"></canvas>
+      <!-- Swipe hint (shown briefly at start) -->
+      <div class="swipe-hint" id="swipe-hint" style="display:none">
+        <span>&#x1F449; Swipe blobs to smash them!</span>
+      </div>
+    </div>
+
+    <!-- Game Over Overlay (inside game screen) -->
+    <div id="gameover-overlay" class="overlay" style="display:none">
+      <div class="gameover-card">
+        <div class="gameover-title" id="gameover-title">Time's Up!</div>
+        <div class="gameover-score-big" id="gameover-score">0</div>
+        <div class="gameover-label">POINTS</div>
+        <div class="gameover-stats">
+          <div class="go-stat">
+            <div class="go-stat-value" id="go-combo">0x</div>
+            <div class="go-stat-label">Best Combo</div>
+          </div>
+          <div class="go-stat">
+            <div class="go-stat-value" id="go-merges">0</div>
+            <div class="go-stat-label">Merges</div>
+          </div>
+          <div class="go-stat">
+            <div class="go-stat-value" id="go-accuracy">0%</div>
+            <div class="go-stat-label">Accuracy</div>
+          </div>
+        </div>
+        <div class="gameover-stars" id="gameover-stars"></div>
+        <div class="gameover-message" id="gameover-message"></div>
+        <div class="gameover-buttons">
+          <button class="btn btn-primary btn-large" onclick="Game.playAgain()">&#x1F504; Again!</button>
+          <button class="btn btn-accent" onclick="Sharing.shareScore()">&#x1F4E4; Share Score</button>
+          <button class="btn btn-ghost" onclick="Game.quit()">Menu</button>
+        </div>
+        <div class="gameover-emoji" id="gameover-emoji"></div>
+      </div>
+    </div>
+
+    <!-- Daily Challenge -->
+    <div id="screen-daily" class="screen">
+      <div class="screen-header">
+        <button class="btn btn-back" onclick="App.navigate('menu')">&#x2190;</button>
+        <h2>Daily Challenge</h2>
+      </div>
+      <div class="daily-container" id="daily-container">
+        <div class="daily-info">
+          <h3 id="daily-date"></h3>
+          <div class="streak-badge" id="daily-streak">
+            <span class="streak-fire">&#x1F525;</span>
+            <span class="streak-count"></span> day streak
+          </div>
+        </div>
+        <button class="btn btn-primary btn-large" id="btn-daily-play" onclick="Challenges.playDaily()">Play Today's Smash!</button>
+        <div id="daily-completed" style="display:none">
+          <p>Today's challenge complete!</p>
+          <div class="gameover-score-big" id="daily-score">0</div>
+          <div class="win-stars" id="daily-stars"></div>
+          <button class="btn btn-accent" onclick="Sharing.shareDaily()">Share Your Score!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collection / Skins -->
+    <div id="screen-collection" class="screen">
+      <div class="screen-header">
+        <button class="btn btn-back" onclick="App.navigate('menu')">&#x2190;</button>
+        <h2>Collection</h2>
+        <span class="coin-display" id="collection-coins">&#x1FA99; 0</span>
+      </div>
+      <div class="collection-container" id="collection-container"></div>
+    </div>
+
+    <!-- Shop -->
+    <div id="screen-shop" class="screen">
+      <div class="screen-header">
+        <button class="btn btn-back" onclick="App.navigate('menu')">&#x2190;</button>
+        <h2>Shop</h2>
+        <span class="coin-display" id="shop-coins">&#x1FA99; 0</span>
+      </div>
+      <div class="shop-container" id="shop-container">
+        <div class="shop-premium-banner">
+          <h3>Number Smash Premium</h3>
+          <p>All skins, all worlds, all blob types!</p>
+          <button class="btn btn-primary btn-large" onclick="Shop.purchasePremium()">Go Premium</button>
+        </div>
+        <div class="shop-section" id="shop-packs"></div>
+        <div class="parental-note"><p>&#x1F512; Purchases require a parent's payment method</p></div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div id="screen-achievements" class="screen">
+      <div class="screen-header">
+        <button class="btn btn-back" onclick="App.navigate('menu')">&#x2190;</button>
+        <h2>Achievements</h2>
+      </div>
+      <div class="achievements-container" id="achievements-container"></div>
+    </div>
+
+    <div id="toast-container"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+  <script src="js/data/state.js"></script>
+  <script src="js/data/sounds.js"></script>
+  <script src="js/data/achievements.js"></script>
+  <script src="js/game/objects.js"></script>
+  <script src="js/game/engine.js"></script>
+  <script src="js/game/renderer.js"></script>
+  <script src="js/game/levels.js"></script>
+  <script src="js/game/solver.js"></script>
+  <script src="js/ui/components.js"></script>
+  <script src="js/ui/screens.js"></script>
+  <script src="js/ui/tutorial.js"></script>
+  <script src="js/social/sharing.js"></script>
+  <script src="js/social/challenges.js"></script>
+  <script src="js/social/leaderboard.js"></script>
+  <script src="js/store/revenuecat.js"></script>
+  <script src="js/store/shop.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
